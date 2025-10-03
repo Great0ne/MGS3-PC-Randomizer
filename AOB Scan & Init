@@ -1,0 +1,180 @@
+AOB Scan
+//alloc(newmem,2048)
+[ENABLE]
+{$lua}
+--INIT FORM
+bFormUnlock = false
+fWeaponDrop = Form.barWeapon.Position
+fItemDrop = Form.barItem.Position
+fMedicDrop = Form.barMedic.Position
+fFaceDrop = Form.barFace.Position
+fUniformDrop = Form.barUniform.Position
+fFoodDrop = Form.barFood.Position
+fAmmoDrop = Form.barAmmo.Position
+fVomitDrop = Form.barVomit.Position
+fDeathDrop = Form.barDeath.Position
+fStealth = Form.checkboxStealth.State
+fInfinity = Form.checkboxInfinity.State
+fGun = Form.checkboxGun.State
+fPatriot = Form.checkboxPatriot.State
+--INIT
+math.randomseed(os.time())--Random Seed
+rndPercent=-1
+rndType=-1
+rndDrop=-1
+rndAmmo=-1
+rndAnim=-1
+rndVomit=-1
+rndDeath=-1
+bRnd=-1
+baseOffset=80
+foodIdOffset=8
+baseVar=-1
+baseData=-1
+baseWeapon=-1
+baseSuppressor=-1
+baseItem=-1
+baseMedic=-1
+baseFace=-1
+baseUniform=-1
+baseFoodSlot=-1
+baseFoodId=-1
+baseName=-1
+baseVomit=-1
+baseDeath=-1
+baseRevival=-1
+maxWeapon=29
+maxSuppressor=32
+maxItem=23 no monkey mask
+maxMedic=9
+maxFace=22
+maxUniform=30 no camo missing
+minFood=50
+maxFood=97--48 id
+maxFoodSlot=16
+maxOffset=2
+readValue=-1--read while
+nbReset=0
+
+--Weapon:7FF71207C1BC Supp:7FF71207F63C Item:7FF71207F27C Face:7FF71208017C  Unif:7FF71207F72C
+--FoodSlot:7FF71207CB6C FoodId:7FF71207C0C8 Vomit:7FF712164C3C
+if syntaxcheck then return end
+--aob knife
+aobWeapon = AOBScan("?? ?? 00 00 ?? ?? 00 00 3F B4 C0 06 01 00 00 00 00 00 00 00")
+if aobWeapon ~= nil then
+   baseWeapon = aobWeapon[0]
+   aobWeapon.destroy()
+end
+--aob suppressor
+aobSuppressor = AOBScan("?? 00 84 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? 0? 00 00 ?? ?? ?? ?? ?? ?? 00 00 01 00 00 00")
+if aobSuppressor ~= nil then
+   baseSuppressor = aobSuppressor[0]
+   aobSuppressor.destroy()
+end
+--aob life medicine
+aobItem = AOBScan("?? 00 0? 00 ?? ?? 00 00 00 00 ?? 00 01 00 00 00 00 00 00 00 00 00 00 ?? 00 00 00 00 70 61 ?? ?? F? 7F 00 00")
+if aobItem ~= nil then
+   --aob serum item+25 hex+4E2 40 hex 7D0
+   aobMedicRaw = aobItem[0]--.."4E2"
+   medicOffset = 50*40--0x7D0
+   aobMedic = tonumber(aobMedicRaw, 16) + medicOffset
+   baseItem = aobItem[0]
+   baseMedic = string.sub(string.format("0x%X",aobMedic),3,15)
+   aobItem.destroy()
+end
+--aob uniform
+aobUniform = AOBScan("0? 00 01 00 00 00 00 00 ?? ?? ?? 1F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? 0? 00 00 ?? ?? ?? ?? ?? 0? 00 00 02 00 00 00")
+if aobUniform ~= nil then
+   --aob face 1050+
+   aobFaceRaw = aobUniform[0]
+   faceOffset = 2640
+   aobFace = tonumber(aobFaceRaw, 16) + faceOffset
+   baseFace = string.sub(string.format("0x%X",aobFace),3,15)
+   baseUniform = aobUniform[0]
+   aobUniform.destroy()
+end
+--aob food slot 16 max / next +50
+aobFoodSlot = AOBScan("01 00 00 00 00 00 00 00 49 93 D0 06 1E 00 00 00")
+if aobFoodSlot ~= nil then
+   baseFoodSlot = aobFoodSlot[0]
+   aobFoodSlot.destroy()
+end
+--aob food ID 16 max / next +8 / id 50-97 / clean ?? 00 00 00 2B 66 98 2F
+aobFoodId = AOBScan("5F 00 00 00 ?? ?? ?? 2F 00 00 00 00 00 00 00 00")
+if aobFoodId ~= nil then
+   baseFoodId = aobFoodId[0]
+   aobFoodId.destroy()
+end
+--Code Cave Name
+baseName = "1800CCF2C"
+--aob vomit 64
+aobVomit = AOBScan("00 00 00 00 30 C2 66 06 FE 05 07 06 00 00 00")
+if aobVomit ~= nil then
+   --baseVomit = aobVomit[0]
+   --CF12D + 5B0F = D4C3C / 23311
+   vomitOffset = 23311
+   rawVomit = tonumber(aobVomit[0], 16) + vomitOffset
+   baseVomit = string.sub(string.format("0x%X",rawVomit),3,15)
+   --Death C3C + E = C4A / 14
+   rawDeath = rawVomit+14
+   baseDeath = string.sub(string.format("0x%X",rawDeath),3,15)
+   aobVomit.destroy()
+end
+if baseItem ~= -1 then
+   baseRevival = string.format("0x%X",tonumber(baseItem, 16) + (3 * baseOffset))
+end
+if baseName ~= -1 then
+   writeString(baseName,string.rep(" ",24))
+   writeString(baseName, "RANDOM")
+end
+--data weapon & supressor
+dataWeapon = {"KNIFE","FORK","CIG SPRAY","HANDKER","MK22","M1911A1","EZ GUN","SAA","PATRIOT","SCORPION",
+              "XM16E1","AK-47","M63","M37","SVD","MOSIN N","RPG-7","TORCH","GRENADE","WP G","STUN G",
+              "CHAFF G","SMOKE G","MAGAZINE","TNT","C3","CLAYMORE","BOOK","MOUSETRAP","MIC",
+              "SP/M1911A","SP/MK22","SP/XM16E1",
+              }
+--data item
+dataItem = {"LF MED","PENTAZEMIN","F.DEATH PILL","REVIVAL.P","CIGAR","SCOPE","THERM G","NVG","CAMERA",
+            "MOTION D","SONAR","MINE D","AP SENSOR","C BOX A","C BOX B","C BOX C","C BOX D",
+            "CROC CAP","KEY A","KEY B","KEY C","BANDANA","STEALTH","BUG JUICE","MONKEY MASK"
+            }
+--data medic
+dataMedic = {"SERUM","ANTIDOTE","C MED","D MED","OINTMENT","SPLINT","DISINFECT","STYPTIC","BANDAGE",
+             "SUTURE KIT"
+             }
+--data face
+dataFace = {"FACE/WOODLAND","FACE/BLACK","FACE/WATER","FACE/DESERT","FACE/SPLITTER","FACE/SNOW",
+            "FACE/KABUKI","FACE/ZOMBIE","FACE/OYAMA","FACE/MASK","FACE/GREEN","FACE/BROWN","FACE/INFINITY",
+            "FACE/SV","FACE/UK","FACE/FR","FACE/GR","FACE/IT","FACE/SP","FACE/SW","FACE/JP","FACE/US"
+            }
+--data uniform
+dataUniform = {--"UNIFORM/OLIVE DRAB",
+               "UNIFORM/TIGER STRIPE","UNIFORM/LEAF","UNIFORM/TREE BARK",
+               "UNIFORM/CHOCO CHIP","UNIFORM/SPLITTER","UNIFORM/RAINDROP","UNIFORM/SQUARES","UNIFORM/WATER",
+               "UNIFORM/BLACK","UNIFORM/SNOW","UNIFORM/OLIVE DRAB","UNIFORM/SNEAKING","UNIFORM/SCIENTIST","UNIFORM/OFFICER",--scientist ok
+               "UNIFORM/MAINTENANCE","UNIFORM/TUXEDO","UNIFORM/HORNET STRIPE","UNIFORM/SPIDER",--Tuxedo ok
+               "UNIFORM/MOSS","UNIFORM/FIRE","UNIFORM/SPIRIT","UNIFORM/COLD WAR","UNIFORM/SNAKE",
+               "UNIFORM/GA-KO","UNIFORM/DESERT TIGER","UNIFORM/DPM","UNIFORM/FLECKTARN",--dpm ok
+               "UNIFORM/AUSCAM DESERT","UNIFORM/ANIMALS","UNIFORM/FLY","UNIFORM/BANANA"--auscam ok
+               }
+--data food
+dataFood = {"R.SNAKE A","R.SNAKE B","R.SNAKE C","R.SNAKE D","R.SNAKE E","R.SNAKE F","R.SNAKE G","R.SNAKE H",
+            "R.SNAKE I","R.SNAKE J","R.SNAKE K","R.GAVIAL","R.FROG A","R.FROG B","R.FROG C","R.RAT",
+            "R.RABBIT","R.SQUIRREL","R.MARKHOR","R.BAT","R.NEST","R.SCORPION","R.SPIDER","R.BIRD A",
+            "R.BIRD B","R.BIRD C","R.BIRD D","R.BIRD E","R.FISH A","R.FISH B","R.FISH C","R.CRAB",
+            "R.MUSHROOM A","R.MUSHROOM B","R.MUSHROOM C","R.MUSHROOM D","R.MUSHROOM E","R.MUSHROOM F",
+            "R.MUSHROOM G","R.FRUIT A","R.FRUIT B","R.FRUIT C","R.VEGETABLE","R.NOODLES","RATION",
+            "R.C MATE","R.P.H HIVE","R.TCHNKO"
+            }
+--Unlock disabled Form
+if baseWeapon ~= -1 and baseSuppressor ~= -1 or baseItem ~= -1 or baseRevival ~= -1 or
+   baseMedic ~= -1 or baseFace ~= -1 or baseUniform ~= -1 or baseFoodSlot ~= -1 or
+   baseFoodId ~= -1 or baseName ~= -1 or baseVomit ~= -1 or baseDeath ~= -1 then
+   unlockForm()
+else
+    Form.labelGame.Caption = "Data problem !"
+    Form.labelGame.Font.Color = 0x0000FF
+end
+{$asm}
+[DISABLE]
+//dealloc(newmem)
