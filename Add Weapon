@@ -1,0 +1,225 @@
+"METAL GEAR SOLID3.exe"+9AF32 Add Weapon
+
+newmem:
+nop
+nop
+nop
+nop
+
+{$luacode rule=RAX mag=RDX}--rax/rdx/rsi =1
+
+if syntaxcheck then return end
+--Not eating food 1
+if rule ~= 1 and mag ~=1 then
+
+--Reset Grenades
+if baseWeapon ~= -1 then
+    for i=18,22 do
+        reset = string.format("0x%X",tonumber(baseWeapon, 16) + (i * baseOffset))
+        if readSmallInteger(reset) == 65535 then writeSmallInteger(reset,0) end
+    end
+end
+
+math.randomseed(os.time())
+--Check Face/Uniform/Food Full
+local chkFace = 0--naked
+local chkUniform = 0--naked/olive
+local chkFood = 0
+local chk=0
+local baseType = -1
+local readValue = -1
+for i=1,maxFace do
+    if i ~= 13 then--Face Infinity 13
+      chk=readSmallInteger(string.format("0x%X",tonumber(baseFace, 16) + (i * baseOffset)))
+      --print("face for "..chk)
+      if chk == 0 then break end
+    end
+      chkFace = chkFace + 1
+end
+for i=1,maxUniform do--Uniform
+    chk=readSmallInteger(string.format("0x%X",tonumber(baseUniform, 16) + (i * baseOffset)))
+    --print("uniform for "..chk)
+    if chk == 0 then break end
+    chkUniform = chkUniform + 1
+end
+for i=0,maxFoodSlot do--Food Slot
+    chk=readSmallInteger(string.format("0x%X",tonumber(baseFoodSlot, 16) + (i * baseOffset)))
+    --print("food for "..chk)
+    if chk == 0 then break end
+    chkFood = chkFood + 1
+end
+
+--WHILE MAX Face/Uniform/Food
+rndPercent = math.random(0,100)
+rndType = math.random(1,6)
+
+while rndType == 1 and rndPercent > fWeaponDrop or
+      rndType == 2 and rndPercent > fItemDrop or
+      rndType == 3 and rndPercent > fMedicDrop or
+      rndType == 4 and chkFace == maxFace or
+      rndType == 4 and rndPercent > fFaceDrop or rndType == 4 and fFaceDrop == 0 or
+      rndType == 5 and chkUniform == maxUniform or
+      rndType == 5 and rndPercent > fUniformDrop or rndType == 5 and fUniformDrop == 0 or
+      rndType == 6 and chkFood == maxFoodSlot or
+      rndType == 6 and rndPercent > fFoodDrop or rndType == 6 and fFoodDrop == 0
+do
+      rndType = math.random(1,6)--Random type
+      rndPercent = math.random(0,100)
+end
+
+
+  --WEAPON x31 -7 ez gun -9 patriot -26 c3 + x3 suppressor 32-34
+  if rndType == 1 then
+     rndDrop = math.random(0,maxSuppressor)
+     --check value & reroll
+     if rndDrop <= maxWeapon then
+        readValue = readSmallInteger(string.format("0x%X",tonumber(baseWeapon, 16) + (rndDrop * baseOffset)))
+        while rndDrop >= 0 and rndDrop <= 1 and readValue > 0 or--knife/fork
+              rndDrop == 6 and fGun == 0 or rndDrop == 6 and fGun == 1 and readValue == 1 or--ez gun
+              rndDrop == 8 and fPatriot == 0 or rndDrop == 8 and fPatriot == 1 and readValue == 1 or--patriot
+              rndDrop == 17 and readValue > 0 or--torch
+              rndDrop == 29 and readValue > 0 --dir mic
+        do
+              rndDrop = math.random(0,maxWeapon)
+              readValue = readSmallInteger(string.format("0x%X",tonumber(baseWeapon, 16) + (rndDrop * baseOffset)))
+        end
+     end
+     --SUPPRESSOR x3
+     if rndDrop > maxWeapon then
+        rndAmmo = 1
+        baseType = baseSuppressor
+     else
+         --1 ammo for single weapon
+        if rndDrop ==0 or rndDrop == 1 or rndDrop == 6 or rndDrop == 8 or rndDrop == 17 or rndDrop == 29 then
+           rndAmmo = 1
+        else
+            rndAmmo = math.random(1,fAmmoDrop)
+        end
+        baseType = baseWeapon
+     end
+     baseData = dataWeapon[rndDrop+1]
+  end
+  --ITEM x25-1 -monkey
+  if rndType == 2 then
+     rndDrop = math.random(0,maxItem)
+     --check value & reroll
+     readValue = readSmallInteger(string.format("0x%X",tonumber(baseItem, 16) + (rndDrop * baseOffset)))
+     while rndDrop >= 3 and rndDrop <= 22 and readValue > 0 or--revival/cigar/binoculars
+           rndDrop == 16 or--debug cardboard
+           rndDrop == 21 or--bandana
+           rndDrop == 22 and fStealth == 0 or rndDrop == 22 and fStealth == 1 and readValue == 1--stealth camo
+     do
+           rndDrop = math.random(0,maxItem)
+           readValue = readSmallInteger(string.format("0x%X",tonumber(baseItem, 16) + (rndDrop * baseOffset)))
+     end
+     --1 ammo for single item
+     if rndDrop >= 3 and rndDrop <= 22 then
+         rndAmmo = 1
+     else
+         rndAmmo = math.random(1,fAmmoDrop)
+     end
+     baseType = baseItem
+     baseData = dataItem[rndDrop+1]
+  end
+  --MEDIC x10
+  if rndType == 3 then
+     rndDrop = math.random(0,maxMedic)
+     rndAmmo = math.random(1,fAmmoDrop)
+     baseType = baseMedic
+     baseData = dataMedic[rndDrop+1]
+  end
+  --FACE x23-1 -no paint
+  if rndType == 4 then
+     rndDrop = math.random(1,maxFace)--start 1 no face
+     --check value & reroll
+     readValue = readSmallInteger(string.format("0x%X",tonumber(baseFace, 16) + (rndDrop * baseOffset)))
+     while readValue ~= 0 or
+           rndDrop == 13 and fInfinity == 0--infinity
+     do
+           rndDrop = math.random(1,maxFace)
+           readValue = readSmallInteger(string.format("0x%X",tonumber(baseFace, 16) + (rndDrop * baseOffset)))
+     end
+     rndAmmo = 1
+     baseType = baseFace
+     baseData = dataFace[rndDrop]
+  end
+  --UNIFORM x32-2 -naked -12 debug? uniform
+  if rndType == 5 then
+     rndDrop = math.random(0,maxUniform)
+     --check value & reroll
+     readValue = readSmallInteger(string.format("0x%X",tonumber(baseUniform, 16) + (rndDrop * baseOffset)))
+     while readValue ~= 0 --or
+     do
+           rndDrop = math.random(0,maxUniform)
+           readValue = readSmallInteger(string.format("0x%X",tonumber(baseUniform, 16) + (rndDrop * baseOffset)))
+     end
+     rndAmmo = 1
+     baseType = baseUniform
+     baseData = dataUniform[rndDrop]
+  end
+  --FOOD x48
+  if rndType == 6 then
+     rndDrop = math.random(minFood,maxFood)
+     rndAmmo = 1
+     --chkFood = chkFood+1--Offset next slot
+     baseType = baseFoodSlot
+     baseData = dataFood[rndDrop-minFood+1]--+1 rndDrop starts 0 not 1
+  end
+  --SET & WRITE VALUE
+  if rndDrop ~= -1 and rndAmmo ~= -1 and baseType ~= -1 and baseData ~= -1 then
+     if rndType ~= 6 then--Not Food
+       --Set rnd address to number & to string hex
+       baseVar = string.format("0x%X",tonumber(baseType, 16) + (rndDrop * baseOffset))
+       --Write value
+       local nilValue = 0
+       if readSmallInteger(baseVar) == 65535 then nilValue = 1 end
+       writeSmallInteger(baseVar, readSmallInteger(baseVar)+rndAmmo+nilValue)
+       --Write Max value Weapon/Item/Medic only
+       if rndType >=1 and rndType <= 3 then
+          local maxSub = string.sub(baseVar,3,15)
+          local maxValue = string.format("0x%X",tonumber(maxSub, 16) + maxOffset)
+          if readSmallInteger(baseVar) >= readSmallInteger(maxValue) then
+             writeSmallInteger(maxValue, readSmallInteger(baseVar)+1)
+          end
+       end
+     end
+     if rndType == 6 and chkFood ~= -1 then--Food
+        baseVar = string.format("0x%X",tonumber(baseType, 16) + (chkFood * baseOffset))
+        if baseVar~= -1 then writeSmallInteger(baseVar, rndAmmo) end--Write Food Slot
+        idVar = string.format("0x%X",tonumber(baseFoodId, 16) + (chkFood * foodIdOffset))
+        if idVar ~= -1 then
+           writeBytes(idVar, rndDrop, 0x00, 0x00, 0x00, 0x2B, 0x66, 0xB9, 0x2F)--Write Food Id
+        end
+     end
+     if baseData ~= -1 and baseName ~= -1 then
+       if rndType >=1 and rndType <= 3 then baseData = baseData.." X "..rndAmmo end--Add rnd ammo text
+       writeString(baseName,string.rep(" ",24))
+       writeString(baseName, baseData)
+     end
+     --Reset
+     rndDrop=-1
+     rndAmmo=-1
+     rndType=-1
+     baseType=-1
+     baseData=-1
+  end
+  --Vomit & Death
+  if baseVomit ~= -1 and baseDeath ~= -1 then
+     rndAnim=math.random(1,2)
+     if rndAnim == 1 and fVomitDrop > 0 then --Vomit
+        rndVomit=math.random(1,100)
+        if rndVomit <= fVomitDrop then writeSmallInteger(baseVomit,1) end
+     end
+     if rndAnim == 2 and fDeathDrop > 0 then --Death
+        rndDeath=math.random(1,100)
+        if rndDeath <= fDeathDrop then writeSmallInteger(baseDeath,40) end
+     end
+  end
+  --Revival Pill bug
+  if readSmallInteger(baseRevival) <= 9 then writeSmallInteger(baseRevival,100) end
+end
+{$asm}
+
+originalcode:
+//mov [rcx+24],ax
+//mov eax,00000001
