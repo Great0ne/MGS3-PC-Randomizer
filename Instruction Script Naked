@@ -1,0 +1,81 @@
+"METAL GEAR SOLID3.exe"+9886A Add Start Knife
+newmem:
+
+nop
+nop
+nop
+
+{$luacode }
+if syntaxcheck then return end
+
+if readSmallInteger(baseRevival) == 0 then
+    if baseWeapon ~= -1 then
+        for i=0,maxWeapon do
+            reset = string.format("0x%X",tonumber(baseWeapon, 16) + (i * baseOffset))
+            writeSmallInteger(reset,65535)
+            if i == 0 then writeSmallInteger(reset,1) end--Knife
+            if i >= 18 and i <= 22 then writeSmallInteger(reset,0) end--Grenades
+        end
+    end
+    if baseSuppressor ~= -1 then
+       for i=0,maxSuppressor do
+            reset = string.format("0x%X",tonumber(baseSuppressor, 16) + (i * baseOffset))
+            writeSmallInteger(reset,1)
+       end
+    end
+    if baseItem ~= -1 then
+       for i=0,maxItem do
+            reset = string.format("0x%X",tonumber(baseItem, 16) + (i * baseOffset))
+            writeSmallInteger(reset,0)
+            if i == 3 then writeSmallInteger(reset,100) end--Revival Pill
+       end
+    end
+    if baseMedic ~= -1 then
+       for i=0,maxMedic do
+            reset = string.format("0x%X",tonumber(baseMedic, 16) + (i * baseOffset))
+            writeSmallInteger(reset,10)--Uniform instruction remove
+       end
+    end
+    if baseFace ~= -1 then
+       for i=0,maxFace do
+            reset = string.format("0x%X",tonumber(baseFace, 16) + (i * baseOffset))
+            writeSmallInteger(reset,0)
+            if i == 0 or i == 5 or i == 10 then writeSmallInteger(reset,1) end--Splitter Face
+       end
+    end
+    if baseUniform ~= -1 then
+       for i=0,maxUniform do
+            reset = string.format("0x%X",tonumber(baseUniform, 16) + (i * baseOffset))
+            writeSmallInteger(reset,0)
+            if i == 0 then writeSmallInteger(reset,1) end--Uniform Naked & Kaki
+            if i == 1 then writeSmallInteger(reset,1) end
+       end
+    end
+end
+------------------------------------------------------------------------------------------
+"METAL GEAR SOLID3.exe"+9886A Add Bullet
+newmem:
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+originalcode:
+//mov [rdx+0000018C],bx
+-----------------------------------------------------------------------------------
+"METAL GEAR SOLID3.exe"+9886A Add Face/Uniform Stat
+{$asm}
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+originalcode:
+//mov [rdi+rcx*8+00002A7C],bp
