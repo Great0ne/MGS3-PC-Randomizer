@@ -6,7 +6,7 @@ nop
 originalcode:
 //mov [rsi],ecx
 mov [rsi+04],r9d
-
+---------------------------------------------------------
 "METAL GEAR SOLID3.exe"+9AF53 Add New Grenade
 newmem:
 nop
@@ -17,7 +17,7 @@ nop
 originalcode:
 //mov [rcx+24],dx
 ret 
-
+---------------------------------------------------------
 "METAL GEAR SOLID3.exe"+403F4A Pickup String 1
 newmem:
 mov rdx,1800CCF2C
@@ -25,7 +25,7 @@ mov rdx,1800CCF2C
 originalcode:
 //mov rdx,[r14]
 mov r14,[rsp+00000150]
-
+---------------------------------------------------------
 "METAL GEAR SOLID3.exe"+403F55 Pickup String 2
 newmem:
 mov rdi,1800CCF2C
@@ -33,7 +33,7 @@ mov rdi,1800CCF2C
 originalcode:
 //mov rdi,[rdi]
 jmp "METAL GEAR SOLID3.exe"+403F5D
-
+---------------------------------------------------------
 "METAL GEAR SOLID3.exe"+399730 Pickup String Bullet
 originalcode:
 //cmp dword ptr ["METAL GEAR SOLID3.exe"+1D5A1A0],01
