@@ -1,10 +1,7 @@
 "METAL GEAR SOLID3.exe"+9AF32 Add Weapon
-
-newmem:
-nop
-nop
-nop
-nop
+"METAL GEAR SOLID3.exe"+9A652 Add Suppr/Medic
+"METAL GEAR SOLID3.exe"+9A65C Add Item/Face/Uniform
+"METAL GEAR SOLID3.exe"+9AF32 Add Food
 
 {$luacode rule=RAX mag=RDX}--rax/rdx/rsi =1
 
@@ -218,8 +215,3 @@ end
   --Revival Pill bug
   if readSmallInteger(baseRevival) <= 9 then writeSmallInteger(baseRevival,100) end
 end
-{$asm}
-
-originalcode:
-//mov [rcx+24],ax
-//mov eax,00000001
